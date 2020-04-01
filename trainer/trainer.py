@@ -38,11 +38,13 @@ class Trainer(BaseTrainer):
         """
         self.model.train()
         self.train_metrics.reset()
-        for batch_idx, (data, target) in enumerate(self.data_loader):
-            data, target = data.to(self.device), target.to(self.device)
+        for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
+            data, speed = data.to(self.device), speed.to(self.device)
+            # steer, throttle, brake = steer.to(self.device), throttle.to(self.device), brake.to(self.device)
+            target = (steer.to(self.device), throttle.to(self.device), brake.to(self.device))
 
             self.optimizer.zero_grad()
-            output = self.model(data)
+            output = self.model((data, speed))
             loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()

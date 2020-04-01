@@ -8,6 +8,7 @@ import model.metric as module_metric
 import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
+from dataset import CarlaDataset
 
 
 # fix random seeds for reproducibility
@@ -17,10 +18,15 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
+
 def main(config):
     logger = config.get_logger('train')
 
     # setup data_loader instances
+    # carla_dataset = CarlaDataset(root='/data/scratch/michelle/e2depth_dataset/datacollector/dataset_images2')
+    # data_loader = torch.utils.data.DataLoader(carla_dataset,
+    #                                             batch_size=4, shuffle=True,
+    #                                             num_workers=4)
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_validation()
 
