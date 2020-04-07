@@ -25,6 +25,7 @@ class Trainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
+        self.loss_weights = config['loss_weights']
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -41,11 +42,15 @@ class Trainer(BaseTrainer):
         for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
             data, speed = data.to(self.device), speed.to(self.device)
             # steer, throttle, brake = steer.to(self.device), throttle.to(self.device), brake.to(self.device)
-            target = (steer.to(self.device), throttle.to(self.device), brake.to(self.device))
-
+            # target = [steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)]
+            target = torch.cat((steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)), dim=1)
             self.optimizer.zero_grad()
-            output = self.model((data, speed))
-            loss = self.criterion(output, target)
+            loss_weights = [self.loss_weights['steer'], self.loss_weights['throttle'], 
+                            self.loss_weights['brake'], self.loss_weights['speed']]
+            output = self.model(data, speed)
+            output.to(self.device)
+
+            loss = self.criterion(output.float(), target.float())  # , loss_weights)
             loss.backward()
             self.optimizer.step()
 
@@ -68,7 +73,6 @@ class Trainer(BaseTrainer):
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
             log.update(**{'val_'+k : v for k, v in val_log.items()})
-
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
         return log
@@ -83,12 +87,13 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
         with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.valid_data_loader):
-                data, target = data.to(self.device), target.to(self.device)
-
-                output = self.model(data)
-                loss = self.criterion(output, target)
-
+            for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
+                data, speed = data.to(self.device), speed.to(self.device)
+                target = torch.cat(
+                    (steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)),
+                    dim=1)
+                output = self.model(data, speed)
+                loss = self.criterion(output.float(), target.float())
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:

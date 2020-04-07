@@ -1,5 +1,5 @@
 {
-    "name": "Mnist_LeNet",
+    "name": "Carla_simple_network",
     "n_gpu": 1,
 
     "arch": {
@@ -26,8 +26,16 @@
     },
     "loss": "nll_loss",
     "metrics": [
+    ],    
+    "metrics2": [
         "accuracy", "top_k_acc"
     ],
+    "loss_weights": {
+        "steer": 1,
+        "throttle": 1,
+        "brake": 1,
+        "speed": 1
+    },
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
@@ -45,6 +53,6 @@
         "monitor": "min val_loss",
         "early_stop": 10,
 
-        "tensorboard": true
+        "tensorboard": false
     }
 }

@@ -91,40 +91,40 @@ class CarlaModel(nn.Module):
             nn.ReLU()
         )
 
-        """branches"""
-        self.branches = nn.ModuleList([
-            nn.Sequential(
+        self.commands_branch = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 3),
+        )
+
+        self.speed_branch = nn.Sequential(
                 nn.Linear(512, 256),
                 nn.Dropout(0.5),
                 nn.ReLU(),
                 nn.Linear(256, 256),
-                nn.Dropout(0.5),
+                # nn.Dropout(self.dropout_vec[1]),
                 nn.ReLU(),
-                nn.Linear(256, 3),
-            ) for i in range(4)
-        ])
+                nn.Linear(256, 1),
+            )
 
-        # TODO understand speed branch and why we should use it && implement it.
+    def forward(self, img, speed):
+        # img, speed = sample
 
-    def forward(self, sample):
-        img, speed = sample
-
-        print(img.shape)
         img = self.conv_block(img)
-        print(img.shape)
-        #img = img.view(img.size(0), -1)  # Reshape
         img = img.view(-1, np.prod(img.shape[1:]))  # Reshape
-        # Reshaping in tensorflow:
-        # img = tf.reshape(img, [-1, int(np.prod(img.get_shape()[1:]))], name='reshape')
-        print(img.shape)
         img = self.img_fc(img)
 
         speed = speed.float()
-        print(type(speed))
         speed = self.speed_fc(speed)
+        joint = torch.cat([img, speed], dim=1)
+        joint = self.joint_fc(joint)
 
-        j = torch.cat([img, speed], 1)
-        j = self.joint_fc(j)
+        pred_speed = self.speed_branch(img)
+        pred_commands = self.commands_branch(joint)
 
-        output = torch.stack([out(j) for out in self.branches], dim=0)
-        return output
+        # output = torch.stack((pred_commands, pred_speed), dim=1)
+        output = torch.cat((pred_commands, pred_speed), dim=1)
+
+        return output  # [pred_commands, pred_speed]  # , img, joint

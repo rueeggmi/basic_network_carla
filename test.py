@@ -45,9 +45,13 @@ def main(config):
     total_metrics = torch.zeros(len(metric_fns))
 
     with torch.no_grad():
-        for i, (data, target) in enumerate(tqdm(data_loader)):
-            data, target = data.to(device), target.to(device)
-            output = model(data)
+        for i, (data, speed, steer, throttle, brake) in enumerate(tqdm(data_loader)):
+            data, speed = data.to(device), speed.to(device)
+            target = torch.cat(
+                (steer.to(device), throttle.to(device), brake.to(device), speed.to(device)), dim=1)
+            # data, target = data.to(device), target.to(device)
+
+            output = model(data, speed)
 
             #
             # save sample images, or do something with output here
