@@ -4,11 +4,14 @@ import event_representations as er
 import os
 import cv2
 from torch.utils.data import Dataset
+from torchvision import transforms
+
 
 class CarlaDataset:
-    def __init__(self, root, transform=None):
+    def __init__(self, root, transform=None, normalize=True):
         self.root = root
         self.transform = transform
+        self.normalize = normalize
         self.image_files = self.get_files(root)
         self.measurements = self.get_measurements(root)
         assert len(self.image_files) > 0
@@ -71,6 +74,11 @@ class CarlaDataset:
             # steer = self.transform(steer)
             # throttle = self.transform(throttle)
             # brake = self.transform(brake)
+
+        if self.normalize:
+            # transforms.Normalize((0.1307,), (0.3081,))]
+
+
         return img, speed, steer, throttle, brake
         # return [[img, speed], [steer, throttle, brake]]
         # return img
