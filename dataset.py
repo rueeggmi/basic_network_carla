@@ -24,7 +24,7 @@ class CarlaDataset:
             data = {}
             for fname in fnames:
                 path = os.path.join(subroot, fname)
-                if fname.split(".")[1] in IMG_EXTENSIONS:
+                if fname.split(".")[1] in IMG_EXTENSIONS and subroot.split("/")[-1] == "rgb":
                     files += [path]
 
         return files
@@ -39,7 +39,7 @@ class CarlaDataset:
             data = {}
             for fname in fnames:
                 path = os.path.join(subroot, fname)
-                if fname.split(".")[1] in MEASUREMENTS_EXTENSIONS:
+                if fname.split(".")[1] in MEASUREMENTS_EXTENSIONS and subroot.split("/")[-1] == "measurements":
                     measurements += [path]
 
         return measurements
@@ -57,6 +57,8 @@ class CarlaDataset:
 
         # normalize to range 0-1 to facilitate learning
         img = img.astype("float32") / 255.0
+        # crop image to 160x346
+        img = img[80:240, :]
 
         speed = np.asarray(measurements[0][0], dtype=float)
         steer = np.asarray(measurements[5], dtype=float)
@@ -69,7 +71,6 @@ class CarlaDataset:
             # steer = self.transform(steer)
             # throttle = self.transform(throttle)
             # brake = self.transform(brake)
-
         return img, speed, steer, throttle, brake
         # return [[img, speed], [steer, throttle, brake]]
         # return img

@@ -32,7 +32,7 @@ def main(config):
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
-    logger.info(model)
+    # logger.info(model)
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
@@ -43,6 +43,9 @@ def main(config):
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
 
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+
+    # print("Number of trainable parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+    # print("Number of parameters: ", sum(p.numel() for p in model.parameters()))
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,

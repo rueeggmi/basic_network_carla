@@ -54,7 +54,7 @@ class CarlaModel(nn.Module):
             nn.BatchNorm2d(128),
             nn.Dropout(0.2),
             nn.ReLU(),
-            nn.Conv2d(128, 256, 3, padding=1),
+            nn.Conv2d(128, 256, 3, stride=2, padding=1),  # new
             nn.BatchNorm2d(256),
             nn.Dropout(0.2),
             nn.ReLU(),
@@ -62,11 +62,21 @@ class CarlaModel(nn.Module):
             nn.BatchNorm2d(256),
             nn.Dropout(0.2),
             nn.ReLU(),
+            # new
+            nn.Conv2d(256, 512, 3, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.Dropout(0.2),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, 3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.Dropout(0.2),
+            nn.ReLU(),
         )
 
         """image FC layers"""
         self.img_fc = nn.Sequential(
-            nn.Linear(1228800, 512),  # check if 1228800 is correct here, used to be 70400
+            nn.Linear(28160, 512),  # First number is equal to size of img
+            # check if 1228800 is correct here, used to be 70400        363264,
             nn.Dropout(0.5),
             nn.ReLU(),
             nn.Linear(512, 512),
@@ -111,7 +121,6 @@ class CarlaModel(nn.Module):
 
     def forward(self, img, speed):
         # img, speed = sample
-
         img = self.conv_block(img)
         img = img.view(-1, np.prod(img.shape[1:]))  # Reshape
         img = self.img_fc(img)

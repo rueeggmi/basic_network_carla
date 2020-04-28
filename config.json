@@ -9,7 +9,7 @@
     "data_loader": {
         "type": "CarlaDataLoader",
         "args":{
-            "data_dir": "/data/scratch/michelle/e2depth_dataset/datacollector/dataset_images2",
+            "data_dir": "/data/storage/michelle/e2depth_dataset/small_dataset",
             "batch_size": 128,
             "shuffle": true,
             "validation_split": 0.1,
@@ -19,8 +19,9 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 0.001,
+            "lr": 0.0002,
             "weight_decay": 0,
+            "betas": [0.7,0.85],
             "amsgrad": true
         }
     },
@@ -31,28 +32,29 @@
         "accuracy", "top_k_acc"
     ],
     "loss_weights": {
-        "steer": 1,
-        "throttle": 1,
-        "brake": 1,
-        "speed": 1
+        "steer": 1.0,
+        "throttle": 1.0,
+        "brake": 1.0,
+        "speed": 1.0
     },
+    "grad_clipping": 1.0,
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 50,
-            "gamma": 0.1
+            "step_size": 50000,
+            "gamma": 0.5
         }
     },
     "trainer": {
         "epochs": 100,
 
-        "save_dir": "saved/",
+        "save_dir": "/data/storage/michelle/carla_basic_network/saved",
         "save_period": 1,
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 100,
 
-        "tensorboard": false
+        "tensorboard": true
     }
 }

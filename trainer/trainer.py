@@ -1,8 +1,13 @@
 import numpy as np
 import torch
 from torchvision.utils import make_grid
+from torch.nn.utils import clip_grad_norm_
 from base import BaseTrainer
-from utils import inf_loop, MetricTracker
+from utils import inf_loop, MetricTracker, plot_grad_flow, plot_classes_preds
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from torchsummary import summary
+# from PIL import Image, ImageDraw, ImageFont
 
 
 class Trainer(BaseTrainer):
@@ -26,9 +31,12 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
         self.loss_weights = config['loss_weights']
+        self.clip = config['grad_clipping']
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        summary(self.model, input_size=([(3, 160, 346), (1,)]))
+
 
     def _train_epoch(self, epoch):
         """
@@ -39,6 +47,7 @@ class Trainer(BaseTrainer):
         """
         self.model.train()
         self.train_metrics.reset()
+
         for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
             data, speed = data.to(self.device), speed.to(self.device)
             # steer, throttle, brake = steer.to(self.device), throttle.to(self.device), brake.to(self.device)
@@ -52,6 +61,9 @@ class Trainer(BaseTrainer):
 
             loss = self.criterion(output.float(), target.float())  # , loss_weights)
             loss.backward()
+
+            clip_grad_norm_(self.model.parameters(), self.clip)
+
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
@@ -59,12 +71,20 @@ class Trainer(BaseTrainer):
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
+            if epoch == 1 and batch_idx == 0:
+                self.writer.add_graph(self.model, [data, speed])
+
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
+                                                                    target.detach().cpu().numpy()[0:4, :],
+                                                                    output.detach().cpu().numpy()[0:4, :]))
+                #self.writer.add_image('input', make_grid(imgs_save.cpu(), nrow=8, normalize=True))
+                self.writer.add_figure('grad_flow', plot_grad_flow(self.model.named_parameters()))
+
 
             if batch_idx == self.len_epoch:
                 break
@@ -84,10 +104,12 @@ class Trainer(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains information about validation
         """
+        print("starting with validation epoch")
         self.model.eval()
         self.valid_metrics.reset()
+
         with torch.no_grad():
-            for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
+            for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.valid_data_loader):
                 data, speed = data.to(self.device), speed.to(self.device)
                 target = torch.cat(
                     (steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)),
@@ -98,11 +120,18 @@ class Trainer(BaseTrainer):
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
+                                                                    target.detach().cpu().numpy()[0:4, :],
+                                                                    output.detach().cpu().numpy()[0:4, :]))
+                #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                #self.writer.add_scalar('validation_loss', loss.item())
 
         # add histogram of model parameters to the tensorboard
+        # print("add histogram to tensorboard")
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
+            self.writer.add_histogram("grad{}".format(name), p.grad.data.cpu().numpy(), bins='auto')
+        # print("Added all histograms")
         return self.valid_metrics.result()
 
     def _progress(self, batch_idx):
