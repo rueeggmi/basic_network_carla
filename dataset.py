@@ -76,8 +76,9 @@ class CarlaDataset:
             # brake = self.transform(brake)
 
         if self.normalize:
-            # transforms.Normalize((0.1307,), (0.3081,))]
-
+            # mean & std can be calculated by setting Trainer.calculate_mean_std = True
+            normalization = transforms.Normalize((0.2013, 0.2283, 0.2659), (0.1581, 0.1688, 0.2086))
+            img = normalization(img)
 
         return img, speed, steer, throttle, brake
         # return [[img, speed], [steer, throttle, brake]]

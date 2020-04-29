@@ -128,7 +128,7 @@ def plot_classes_preds(images, targets, outputs):
     fig = plt.figure(figsize=(nbr_images * 1.5, 1.5))
     for idx in range(0, nbr_images):
         ax = fig.add_subplot(1, nbr_images, idx+1, xticks=[], yticks=[])
-        plt.imshow(np.transpose(images[idx], (1, 2, 0)))
+        plt.imshow(np.transpose(images[idx], (1, 2, 0)).astype(np.uint8))
         # matplotlib_imshow(images[idx], one_channel=False)
         ax.set_title("Pred: sp={0:.2f}, st={1:.2f}, th={2:.2f}, br={3:.2f}\n"
             "True: sp={4:.2f}, st={5:.2f}, th={6:.2f}, br={7:.2f}".format(

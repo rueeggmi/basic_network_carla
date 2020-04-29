@@ -32,9 +32,11 @@ class Trainer(BaseTrainer):
         self.log_step = int(np.sqrt(data_loader.batch_size))
         self.loss_weights = config['loss_weights']
         self.clip = config['grad_clipping']
+        self.calculate_mean_std = False  # change to True if mean & std of dataset needs to be known for normalization
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        # print summary of network (adapt input size to image size)
         summary(self.model, input_size=([(3, 160, 346), (1,)]))
 
 
@@ -45,6 +47,26 @@ class Trainer(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
+        # calculate dataset mean and std if requested. Values can be used for image normalization.
+        if self.calculate_mean_std:
+            mean = torch.tensor([0.0, 0.0, 0.0])
+            meansq = torch.tensor([0.0, 0.0, 0.0])
+            count = 0
+
+            for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
+                for i in range(0, data.shape[0]):
+                    mean = mean + data[i].sum(axis=[1,2])
+                    #mean = data.sum()
+                    #data_sqd = data[i] ** 2
+                    meansq = meansq + (data[i] ** 2).sum(axis=[1,2])
+                    count += np.prod(data[i].shape[1:3])
+
+            total_mean = mean / count
+            total_var = (meansq / count) - (total_mean ** 2)
+            total_std = torch.sqrt(total_var)
+            print("mean: " + str(total_mean))
+            print("std: " + str(total_std))
+
         self.model.train()
         self.train_metrics.reset()
 

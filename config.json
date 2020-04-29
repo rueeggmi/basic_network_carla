@@ -9,7 +9,7 @@
     "data_loader": {
         "type": "CarlaDataLoader",
         "args":{
-            "data_dir": "/data/storage/michelle/e2depth_dataset/small_dataset",
+            "data_dir": "/media/scratch/michelle/small_dataset/random_testing6",
             "batch_size": 128,
             "shuffle": true,
             "validation_split": 0.1,
@@ -48,7 +48,7 @@
     "trainer": {
         "epochs": 100,
 
-        "save_dir": "/data/storage/michelle/carla_basic_network/saved",
+        "save_dir": "/media/scratch/michelle/carla_basic_network/saved",
         "save_period": 1,
         "verbosity": 2,
         

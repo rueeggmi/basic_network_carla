@@ -81,7 +81,6 @@ dependencies:
   - numpy=1.18.1=py37h4f9e942_0
   - numpy-base=1.18.1=py37hde5b4d6_1
   - opencv=3.4.2=py37h6fd60c2_1
-  - openssl=1.1.1=h7b6447c_0
   - opt_einsum=3.1.0=py_0
   - pandas=1.0.3=py37h0573a6f_0
   - pcre=8.44=he1b5a44_0
