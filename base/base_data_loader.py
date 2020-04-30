@@ -32,8 +32,8 @@ class BaseDataLoader(DataLoader):
 
         idx_full = np.arange(self.n_samples)
 
-        np.random.seed(0)
-        np.random.shuffle(idx_full)
+        #np.random.seed(0)
+        #np.random.shuffle(idx_full)
 
         if isinstance(split, int):
             assert split > 0
@@ -42,8 +42,15 @@ class BaseDataLoader(DataLoader):
         else:
             len_valid = int(self.n_samples * split)
 
-        valid_idx = idx_full[0:len_valid]
-        train_idx = np.delete(idx_full, np.arange(0, len_valid))
+        # split between validation & training: divide dataset into 10 parts,
+        # always take first 10% of each part as validation data.
+        samples_10th = int(self.n_samples/10)
+        valid_idx = []
+        for i in range(0, 10):
+            valid_idx.append(idx_full[i*samples_10th:int((i+1/10)*samples_10th)])
+
+        valid_idx = np.reshape(np.asarray(valid_idx),len(valid_idx)*len(valid_idx[0]))
+        train_idx = np.delete(idx_full, valid_idx)
 
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)

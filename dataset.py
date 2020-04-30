@@ -8,7 +8,7 @@ from torchvision import transforms
 
 
 class CarlaDataset:
-    def __init__(self, root, transform=None, normalize=True):
+    def __init__(self, root, transform=None, normalize=False):
         self.root = root
         self.transform = transform
         self.normalize = normalize
