@@ -32,26 +32,26 @@ class BaseDataLoader(DataLoader):
 
         idx_full = np.arange(self.n_samples)
 
-        #np.random.seed(0)
-        #np.random.shuffle(idx_full)
+        '''np.random.seed(0)
+        np.random.shuffle(idx_full)
 
         if isinstance(split, int):
             assert split > 0
             assert split < self.n_samples, "validation set size is configured to be larger than entire dataset."
             len_valid = split
         else:
-            len_valid = int(self.n_samples * split)
+            len_valid = int(self.n_samples * split)'''
 
         # split between validation & training: divide dataset into 10 parts,
         # always take first 10% of each part as validation data.
-        samples_10th = int(self.n_samples/10)
+        samples_part = int(self.n_samples * split)
         valid_idx = []
-        for i in range(0, 10):
-            valid_idx.append(idx_full[i*samples_10th:int((i+1/10)*samples_10th)])
+        nbr_parts = int(1 / split)
+        for i in range(0, nbr_parts):
+            valid_idx.append(idx_full[i*samples_part:int((i+split)*samples_part)])
 
         valid_idx = np.reshape(np.asarray(valid_idx),len(valid_idx)*len(valid_idx[0]))
         train_idx = np.delete(idx_full, valid_idx)
-
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
 
