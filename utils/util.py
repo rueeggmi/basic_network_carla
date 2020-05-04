@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision
 from matplotlib.lines import Line2D
-
+from PIL import Image, ImageFont, ImageDraw, ImageOps
+import cv2
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
@@ -135,3 +136,45 @@ def plot_classes_preds(images, targets, outputs):
             outputs[idx][0], outputs[idx][1], outputs[idx][2], outputs[idx][3],
             targets[idx][0], targets[idx][1], targets[idx][2], targets[idx][3], ), fontsize=3.5)
     return fig
+
+def add_prediction_images(images, targets, outputs):
+    nbr_images = targets.shape[0]
+    '''#font = ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSans.ttf", 25)
+    draw = ImageDraw.Draw(img)
+    #draw.text((0,0), "This is a test", (255,255,0), font=font)
+    draw.text((0,0), "This is a test", (255,255,0))
+    draw = ImageDraw.Draw(img)'''
+    #img = cv2.putText(img, str("Hello World"), (0, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 1), 2)
+    #img = cv2.putText(img, text="hello", org=(200, 200), fontFace=3, fontScale=3,
+    #                           color=(0, 0, 1), thickness=5)
+    new_images = np.empty([nbr_images*2, images[0].shape[0], images[0].shape[1], images[0].shape[2]])
+    height = images[0].shape[1]
+    width = images[0].shape[2]
+    print(height)
+    print(width)
+    print(images.shape)
+    print(new_images.shape)
+    for idx in range(0, nbr_images):
+        new_images[idx*2, :, :, :] = images[idx]
+        print(new_images.shape)
+        #pred_img = np.zeros_like(images[idx])
+        pred_img = Image.new('RGB', (width, height), color=(1,1,1))
+        draw = ImageDraw.Draw(pred_img)
+        #font = ImageFont.truetype("arial.ttf", 100)
+        #font = ImageFont.load_default().font
+        #font = ImageFont.truetype("arial")
+        text = "Pred: sp={0:.2f}, st={1:.2f}, th={2:.2f}, br={3:.2f}\n True: sp={4:.2f}, st={5:.2f}, th={6:.2f}, br={7:.2f}".format(
+            outputs[idx][0], outputs[idx][1], outputs[idx][2], outputs[idx][3],
+            targets[idx][0], targets[idx][1], targets[idx][2], targets[idx][3])
+        print(text)
+        print(type(text))
+        #draw.text((0,0), str(text), (255,255,0), font=font)
+        draw.text((0, 0), text, (0, 0, 255))
+        draw = ImageDraw.Draw(pred_img)
+        #pred_img = ImageOps.mirror(pred_img)
+        #pred_img = pred_img.rotate(-90)
+        #pred_img = cv2.putText(pred_img, str("Hello World"), (0, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 1), 2)
+        new_images[idx*2+1, :, :, :] = np.transpose(np.asarray(pred_img), (2, 0, 1))
+        print(new_images.shape)
+
+    return torch.from_numpy(new_images)

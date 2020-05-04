@@ -3,7 +3,7 @@ import torch
 from torchvision.utils import make_grid
 from torch.nn.utils import clip_grad_norm_
 from base import BaseTrainer
-from utils import inf_loop, MetricTracker, plot_grad_flow, plot_classes_preds
+from utils import inf_loop, MetricTracker, plot_grad_flow, plot_classes_preds, add_prediction_images
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from torchsummary import summary
@@ -105,6 +105,9 @@ class Trainer(BaseTrainer):
                                                                     target.detach().cpu().numpy()[0:4, :],
                                                                     output.detach().cpu().numpy()[0:4, :]))
                 #self.writer.add_image('input', make_grid(imgs_save.cpu(), nrow=8, normalize=True))
+                self.writer.add_image('images2', make_grid(add_prediction_images(data.detach().cpu().numpy()[0:4, :, :, :],
+                                                                    target.detach().cpu().numpy()[0:4, :],
+                                                                    output.detach().cpu().numpy()[0:4, :]), nrow=4))
                 self.writer.add_figure('grad_flow', plot_grad_flow(self.model.named_parameters()))
 
 

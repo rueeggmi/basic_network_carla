@@ -51,7 +51,7 @@ class CarlaDataset:
         path = self.image_files[index]
         path_meas = self.measurements[index]
 
-        img = cv2.imread(path)
+        img = cv2.imread(path, -1)
         meas = np.load(path_meas, allow_pickle=True)
         measurements = meas['measurements']
 
