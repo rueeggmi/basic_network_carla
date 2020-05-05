@@ -150,13 +150,9 @@ def add_prediction_images(images, targets, outputs):
     new_images = np.empty([nbr_images*2, images[0].shape[0], images[0].shape[1], images[0].shape[2]])
     height = images[0].shape[1]
     width = images[0].shape[2]
-    print(height)
-    print(width)
-    print(images.shape)
-    print(new_images.shape)
+
     for idx in range(0, nbr_images):
         new_images[idx*2, :, :, :] = images[idx]
-        print(new_images.shape)
         #pred_img = np.zeros_like(images[idx])
         pred_img = Image.new('RGB', (width, height), color=(1,1,1))
         draw = ImageDraw.Draw(pred_img)
@@ -166,8 +162,7 @@ def add_prediction_images(images, targets, outputs):
         text = "Pred: sp={0:.2f}, st={1:.2f}, th={2:.2f}, br={3:.2f}\n True: sp={4:.2f}, st={5:.2f}, th={6:.2f}, br={7:.2f}".format(
             outputs[idx][0], outputs[idx][1], outputs[idx][2], outputs[idx][3],
             targets[idx][0], targets[idx][1], targets[idx][2], targets[idx][3])
-        print(text)
-        print(type(text))
+
         #draw.text((0,0), str(text), (255,255,0), font=font)
         draw.text((0, 0), text, (0, 0, 255))
         draw = ImageDraw.Draw(pred_img)
@@ -175,6 +170,5 @@ def add_prediction_images(images, targets, outputs):
         #pred_img = pred_img.rotate(-90)
         #pred_img = cv2.putText(pred_img, str("Hello World"), (0, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 1), 2)
         new_images[idx*2+1, :, :, :] = np.transpose(np.asarray(pred_img), (2, 0, 1))
-        print(new_images.shape)
 
     return torch.from_numpy(new_images)

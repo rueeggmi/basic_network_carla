@@ -52,6 +52,7 @@ class CarlaDataset:
         path_meas = self.measurements[index]
 
         img = cv2.imread(path, -1)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         meas = np.load(path_meas, allow_pickle=True)
         measurements = meas['measurements']
 
@@ -62,11 +63,15 @@ class CarlaDataset:
         img = img.astype("float32") / 255.0
         # crop image to 160x346
         img = img[80:240, :]
-
+        print(measurements)
         speed = np.asarray(measurements[0][0], dtype=float)
+        print("dataset speed: ", speed)
         steer = np.asarray(measurements[5], dtype=float)
+        print("dataset steer: ", steer)
         throttle = np.asarray(measurements[4], dtype=float)
+        print("dataset throttle: ", throttle)
         brake = np.asarray(measurements[6], dtype=float)
+        print("dataset brake: ", brake)
 
         if self.transform:
             img = self.transform(img)

@@ -71,10 +71,14 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
 
         for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
+            print("trainer speed: ", speed)
+            print("trainer steer: ", steer)
+            print("trainer throttle: ", throttle)
+            print("trainer brake: ", brake)
             data, speed = data.to(self.device), speed.to(self.device)
             # steer, throttle, brake = steer.to(self.device), throttle.to(self.device), brake.to(self.device)
             # target = [steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)]
-            target = torch.cat((steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)), dim=1)
+            target = torch.cat((speed.to(self.device), steer.to(self.device), throttle.to(self.device), brake.to(self.device)), dim=1)
             self.optimizer.zero_grad()
             loss_weights = [self.loss_weights['steer'], self.loss_weights['throttle'], 
                             self.loss_weights['brake'], self.loss_weights['speed']]
@@ -93,22 +97,24 @@ class Trainer(BaseTrainer):
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
-            if epoch == 1 and batch_idx == 0:
-                self.writer.add_graph(self.model, [data, speed])
+            # if epoch == 1 and batch_idx == 0:
+                # self.writer.add_graph(self.model, [data, speed])
 
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
-                                                                    target.detach().cpu().numpy()[0:4, :],
-                                                                    output.detach().cpu().numpy()[0:4, :]))
+                # self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
+                #                                                    target.detach().cpu().numpy()[0:4, :],
+                #                                                    output.detach().cpu().numpy()[0:4, :]))
                 #self.writer.add_image('input', make_grid(imgs_save.cpu(), nrow=8, normalize=True))
                 self.writer.add_image('images2', make_grid(add_prediction_images(data.detach().cpu().numpy()[0:4, :, :, :],
                                                                     target.detach().cpu().numpy()[0:4, :],
                                                                     output.detach().cpu().numpy()[0:4, :]), nrow=4))
                 self.writer.add_figure('grad_flow', plot_grad_flow(self.model.named_parameters()))
+                self.writer.add_scalar('learning_rate', self.lr_scheduler.get_last_lr()[0])
+
 
 
             if batch_idx == self.len_epoch:
@@ -145,18 +151,24 @@ class Trainer(BaseTrainer):
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
-                self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
-                                                                    target.detach().cpu().numpy()[0:4, :],
-                                                                    output.detach().cpu().numpy()[0:4, :]))
-                #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-                #self.writer.add_scalar('validation_loss', loss.item())
+        # self.writer.add_figure('images', plot_classes_preds(data.detach().cpu().numpy()[0:4, :, :, :],
+        #                                                    target.detach().cpu().numpy()[0:4, :],
+        #                                                    output.detach().cpu().numpy()[0:4, :]))
+                self.writer.add_image('images2',
+                                      make_grid(add_prediction_images(data.detach().cpu().numpy()[0:4, :, :, :],
+                                                                      target.detach().cpu().numpy()[0:4, :],
+                                                                      output.detach().cpu().numpy()[0:4, :]), nrow=4))
 
-        # add histogram of model parameters to the tensorboard
-        # print("add histogram to tensorboard")
-        for name, p in self.model.named_parameters():
-            self.writer.add_histogram(name, p, bins='auto')
-            self.writer.add_histogram("grad{}".format(name), p.grad.data.cpu().numpy(), bins='auto')
-        # print("Added all histograms")
+        #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+        #self.writer.add_scalar('validation_loss', loss.item())
+
+        if epoch % 5 == 0:
+            # add histogram of model parameters to the tensorboard
+            # print("add histogram to tensorboard")
+            for name, p in self.model.named_parameters():
+                self.writer.add_histogram(name, p, bins='auto')
+                self.writer.add_histogram("grad{}".format(name), p.grad.data.cpu().numpy(), bins='auto')
+            # print("Added all histograms")
         return self.valid_metrics.result()
 
     def _progress(self, batch_idx):
