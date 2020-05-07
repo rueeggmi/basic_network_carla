@@ -71,14 +71,15 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
 
         for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.data_loader):
-            print("trainer speed: ", speed)
-            print("trainer steer: ", steer)
-            print("trainer throttle: ", throttle)
-            print("trainer brake: ", brake)
             data, speed = data.to(self.device), speed.to(self.device)
-            # steer, throttle, brake = steer.to(self.device), throttle.to(self.device), brake.to(self.device)
-            # target = [steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)]
+            '''for i, brake_value in enumerate(brake):
+                if brake_value != 0 and brake_value != 1:
+                    print("hilfiiiio!!!!!!!!!!!!!!!!!!!!")
+                    print(brake_value)
+                    print(throttle[i])'''
+
             target = torch.cat((speed.to(self.device), steer.to(self.device), throttle.to(self.device), brake.to(self.device)), dim=1)
+            # target = torch.cat((speed.to(self.device), steer.to(self.device), throttle.to(self.device)), dim=1)
             self.optimizer.zero_grad()
             loss_weights = [self.loss_weights['steer'], self.loss_weights['throttle'], 
                             self.loss_weights['brake'], self.loss_weights['speed']]
@@ -113,7 +114,7 @@ class Trainer(BaseTrainer):
                                                                     target.detach().cpu().numpy()[0:4, :],
                                                                     output.detach().cpu().numpy()[0:4, :]), nrow=4))
                 self.writer.add_figure('grad_flow', plot_grad_flow(self.model.named_parameters()))
-                self.writer.add_scalar('learning_rate', self.lr_scheduler.get_last_lr()[0])
+                self.writer.add_scalar('learning_rate', self.lr_scheduler.get_lr()[0])
 
 
 
@@ -143,8 +144,10 @@ class Trainer(BaseTrainer):
             for batch_idx, (data, speed, steer, throttle, brake) in enumerate(self.valid_data_loader):
                 data, speed = data.to(self.device), speed.to(self.device)
                 target = torch.cat(
-                    (steer.to(self.device), throttle.to(self.device), brake.to(self.device), speed.to(self.device)),
+                    (speed.to(self.device), steer.to(self.device), throttle.to(self.device), brake.to(self.device)),
                     dim=1)
+                # target = torch.cat(
+                #    (speed.to(self.device), steer.to(self.device), throttle.to(self.device)), dim=1)
                 output = self.model(data, speed)
                 loss = self.criterion(output.float(), target.float())
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')

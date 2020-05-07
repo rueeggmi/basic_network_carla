@@ -9,7 +9,7 @@
     "data_loader": {
         "type": "CarlaDataLoader",
         "args":{
-            "data_dir": "/data/storage/michelle/e2depth_dataset/1_img_dataset",
+            "data_dir": "/data/storage/michelle/e2depth_dataset/dataset_followleadingvehicle",
             "batch_size": 128,
             "shuffle": true,
             "validation_split": 0.1,
@@ -41,7 +41,7 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 50,
+            "step_size": 20,
             "gamma": 0.5
         }
     },

@@ -107,6 +107,7 @@ class CarlaModel(nn.Module):
             nn.Linear(256, 256),
             nn.ReLU(),
             nn.Linear(256, 3),
+            # nn.Linear(256, 2),
         )
 
         self.speed_branch = nn.Sequential(

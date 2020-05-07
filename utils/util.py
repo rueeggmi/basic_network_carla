@@ -156,12 +156,16 @@ def add_prediction_images(images, targets, outputs):
         #pred_img = np.zeros_like(images[idx])
         pred_img = Image.new('RGB', (width, height), color=(1,1,1))
         draw = ImageDraw.Draw(pred_img)
+
         #font = ImageFont.truetype("arial.ttf", 100)
         #font = ImageFont.load_default().font
         #font = ImageFont.truetype("arial")
         text = "Pred: sp={0:.2f}, st={1:.2f}, th={2:.2f}, br={3:.2f}\n True: sp={4:.2f}, st={5:.2f}, th={6:.2f}, br={7:.2f}".format(
             outputs[idx][0], outputs[idx][1], outputs[idx][2], outputs[idx][3],
             targets[idx][0], targets[idx][1], targets[idx][2], targets[idx][3])
+        # text = "Pred: sp={0:.2f}, st={1:.2f}, th={2:.2f}\n True: sp={3:.2f}, st={4:.2f}, th={5:.2f}".format(
+        #    outputs[idx][0], outputs[idx][1], outputs[idx][2],
+        #    targets[idx][0], targets[idx][1], targets[idx][2])
 
         #draw.text((0,0), str(text), (255,255,0), font=font)
         draw.text((0, 0), text, (0, 0, 255))
