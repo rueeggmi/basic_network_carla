@@ -7,7 +7,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import torch
-import torchvision
+#import torchvision
+
 from matplotlib.lines import Line2D
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 import cv2
@@ -176,3 +177,4 @@ def add_prediction_images(images, targets, outputs):
         new_images[idx*2+1, :, :, :] = np.transpose(np.asarray(pred_img), (2, 0, 1))
 
     return torch.from_numpy(new_images)
+

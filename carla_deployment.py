@@ -7,34 +7,39 @@ import model.model as module_arch
 from parse_config import ConfigParser
 
 
+class NetworkDeployment:
+    def __init__(self, args):
+        """
+        class to run network within CARLA to steer the ego vehicle
+        :param args: arguments contain path to config file under --resume
+        """
+        self.config = ConfigParser.from_args(args)
+        self.model = create_network(config)
 
-def create_network(config, checkpoint):
-    model = config.init_obj('arch', module_arch)
+    def create_network(self, config):
+        model = config.init_obj('arch', module_arch)
 
-    checkpoint = torch.load(config.resume)
-    state_dict = checkpoint['state_dict']
-    if config['n_gpu'] > 1:
-        model = torch.nn.DataParallel(model)
-    model.load_state_dict(state_dict)
+        checkpoint = torch.load(config.resume)
+        state_dict = checkpoint['state_dict']
+        if config['n_gpu'] > 1:
+            model = torch.nn.DataParallel(model)
+        model.load_state_dict(state_dict)
 
-    # prepare model for testing
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-    model.eval()
+        # prepare model for testing
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model = model.to(device)
+        model.eval()
 
-    return model
+        return model
 
+    def run_network(image, measurements):
 
-def run_network(image, measurements):
-    data, speed = data.to(device), speed.to(device)
-    target = torch.cat(
-        (steer.to(device), throttle.to(device), brake.to(device), speed.to(device)), dim=1)
-    # data, target = data.to(device), target.to(device)
+        data, speed = image.to(device), measurements.to(device)
 
-    output = model(data, speed)
+        output = model(data, speed)
 
-    return output
-
+        return output
+'''
 args = argparse.ArgumentParser(description='PyTorch Template')
 args.add_argument('-c', '--config', default=None, type=str,
                   help='config file path (default: None)')
@@ -110,3 +115,4 @@ def main(config):
         met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
     })
     logger.info(log)
+    '''

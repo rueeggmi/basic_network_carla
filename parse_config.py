@@ -18,7 +18,7 @@ class ConfigParser:
         :param modification: Dict keychain:value, specifying position values to be replaced from config dict.
         :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log. Timestamp is being used as default
         """
-        # load config file and apply modification
+        # load config file and apply modificationfrom utils import read_json
         self._config = _update_config(config, modification)
         self.resume = resume
 
@@ -54,8 +54,8 @@ class ConfigParser:
         """
         for opt in options:
             args.add_argument(*opt.flags, default=None, type=opt.type)
-        if not isinstance(args, tuple):
-            args = args.parse_args()
+        #if not isinstance(args, tuple):
+        #    args = args.parse_args()
 
         if args.device is not None:
             os.environ["CUDA_VISIBLE_DEVICES"] = args.device
