@@ -70,7 +70,6 @@ class CarlaDataset:
 
         # normalize to range 0-1 to facilitate learning
         speed = speed / 12.0
-
         if self.transform:
             img = self.transform(img)
             # speed = self.transform(speed)

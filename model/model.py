@@ -135,6 +135,6 @@ class CarlaModel(nn.Module):
         pred_commands = self.commands_branch(joint)
 
         # output = torch.stack((pred_commands, pred_speed), dim=1)
-        output = torch.cat((pred_commands, pred_speed), dim=1)
+        output = torch.cat((pred_speed, pred_commands), dim=1)
 
         return output  # [pred_commands, pred_speed]  # , img, joint

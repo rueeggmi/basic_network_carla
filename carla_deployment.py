@@ -1,5 +1,7 @@
 import torch
+from torchvision import transforms
 from tqdm import tqdm
+import numpy as np
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
@@ -14,7 +16,11 @@ class NetworkDeployment:
         :param args: arguments contain path to config file under --resume
         """
         self.config = ConfigParser.from_args(args)
-        self.model = create_network(config)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if self.device == 'cpu':
+            print("Warning: No GPU available. Network will run on CPU")
+        self.model = self.create_network(self.config)
+        n_gpu = torch.cuda.device_count()
 
     def create_network(self, config):
         model = config.init_obj('arch', module_arch)
@@ -24,21 +30,37 @@ class NetworkDeployment:
         if config['n_gpu'] > 1:
             model = torch.nn.DataParallel(model)
         model.load_state_dict(state_dict)
-
+        device = self.device
         # prepare model for testing
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = model.to(device)
+        model = model.to(self.device)
         model.eval()
 
         return model
 
-    def run_network(image, measurements):
+    def run_network(self, img, speed):
+        print("running network")
+        # normalize to range 0-1 to facilitate learning
+        img = img.astype("float32") / 255.0
+        # crop image to 160x346
+        img = img[80:240, :]
 
-        data, speed = image.to(device), measurements.to(device)
+        # normalize to range 0-1 to facilitate learning
+        speed = speed / 12.0
+        to_tensor = transforms.ToTensor()
+        img = to_tensor(img)
 
-        output = model(data, speed)
+        # reshape speed array for correct tensor conversion
+        speed = speed.reshape((1, 1))
+        speed = to_tensor(speed)
+        speed = speed.reshape((1, 1))
+        img, speed = img.to(self.device), speed.to(self.device)
+        normalization = transforms.Normalize((0.2013, 0.2283, 0.2659), (0.1581, 0.1688, 0.2086))
+        img = normalization(img)
+        img = img.reshape((1, img.shape[0], img.shape[1], img.shape[2]))
 
+        output = self.model(img, speed)
         return output
+
 '''
 args = argparse.ArgumentParser(description='PyTorch Template')
 args.add_argument('-c', '--config', default=None, type=str,
