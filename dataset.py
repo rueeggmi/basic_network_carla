@@ -23,7 +23,8 @@ class CarlaDataset:
         files = []
         assert os.path.isdir(root), '%s is not a valid directory' % root
 
-        for subroot, _, fnames in sorted(os.walk(root)):
+        for subroot, dirs, fnames in sorted(os.walk(root)):
+            dirs.sort()
             data = {}
             for fname in fnames:
                 path = os.path.join(subroot, fname)
@@ -38,7 +39,8 @@ class CarlaDataset:
         measurements = []
         assert os.path.isdir(root), '%s is not a valid directory' % root
 
-        for subroot, _, fnames in sorted(os.walk(root)):
+        for subroot, dirs, fnames in sorted(os.walk(root)):
+            dirs.sort()
             data = {}
             for fname in fnames:
                 path = os.path.join(subroot, fname)
